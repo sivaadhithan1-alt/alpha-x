@@ -1,4 +1,4 @@
-hackspora 2.0
+**Problem Statement 3 · Hackspora 2.0 · Built with ❤️ for student safety**
 
 ```markdown
 # 🛡️ ScamCheck — Opportunity Verification Engine
@@ -159,4 +159,4 @@ published HR contacts before paying anyone.
 |ARJUN A|SOFTWARE|
 |LOKESH|R&D|
 
-**Problem Statement 3 · Hackspora 2.0 · Built with ❤️ for student safety**
+
