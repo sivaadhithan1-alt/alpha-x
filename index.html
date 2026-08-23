@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="ScamCheck — verify internship/job offers for scam red flags, and run due-diligence on recruiters, mentors, and courses.">
+<title>ScamCheck — Opportunity Verification</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z' fill='%2322d3ee'/></svg>">
+<style>
+  :root{
+    --bg:#070b14; --panel:#0d1526; --card:#101a30; --card2:#0c1425;
+    --border:rgba(148,163,184,.14); --border2:rgba(148,163,184,.22);
+    --text:#e5e9f2; --muted:#8b98b4; --muted2:#66738f;
+    --cyan:#22d3ee; --indigo:#818cf8;
+    --red:#f43f5e; --amber:#f59e0b; --green:#10b981; --violet:#a78bfa;
+    --radius:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Inter",ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:
+      radial-gradient(1100px 500px at 85% -10%, rgba(129,140,248,.12), transparent 60%),
+      radial-gradient(900px 480px at -10% 0%, rgba(34,211,238,.10), transparent 55%),
+      var(--bg);
+    color:var(--text); min-height:100vh; line-height:1.55;
+  }
+  #bg-video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+  .bg-overlay{position:fixed;inset:0;z-index:-1;
+    background:linear-gradient(180deg,rgba(7,11,20,.82),rgba(7,11,20,.70) 45%,rgba(7,11,20,.85));}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);
+    background:rgba(7,11,20,.78);border-bottom:1px solid var(--border);}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:.2px}
+  .brand small{display:block;font-weight:500;font-size:10.5px;color:var(--muted);letter-spacing:.4px}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);
+    border:1px solid var(--border);border-radius:99px;padding:5px 12px;background:rgba(16,26,48,.6);}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted2)}
+  .dot.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+  .hero{padding:40px 0 20px;text-align:center}
+  .hero h1{font-size:clamp(26px,4.2vw,42px);font-weight:800;letter-spacing:-.5px;
+    background:linear-gradient(92deg,#f8fafc 20%,var(--cyan) 60%,var(--indigo));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .hero p{color:var(--muted);max-width:700px;margin:10px auto 0;font-size:15px}
+  .hero .tag{display:inline-block;margin-bottom:14px;font-size:11.5px;letter-spacing:1.6px;
+    text-transform:uppercase;color:var(--cyan);border:1px solid rgba(34,211,238,.35);
+    border-radius:99px;padding:5px 14px;background:rgba(34,211,238,.07);}
+
+  /* mode tabs */
+  .tabs{display:flex;gap:10px;justify-content:center;margin:22px 0 24px}
+  .tab{cursor:pointer;border:1px solid var(--border2);background:#0c1526;color:var(--muted);
+    font-weight:700;font-size:14px;padding:11px 22px;border-radius:12px;transition:all .15s;font-family:inherit}
+  .tab:hover{color:var(--text);border-color:var(--cyan)}
+  .tab.active{color:#03121a;background:linear-gradient(92deg,var(--cyan),var(--indigo));border-color:transparent}
+  .view{display:none}
+  .view.active{display:block}
+
+  .grid{display:grid;grid-template-columns:1fr 1.05fr;gap:22px;align-items:start;padding-bottom:26px}
+  @media (max-width:940px){.grid{grid-template-columns:1fr}}
+
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));
+    border:1px solid var(--border);border-radius:var(--radius);
+    padding:22px;box-shadow:0 18px 50px -30px rgba(0,0,0,.7);}
+  .card h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .hint{font-size:12px;color:var(--muted);font-weight:400}
+
+  textarea,input,select{
+    width:100%;background:#0a1222;border:1px solid var(--border2);border-radius:12px;
+    color:var(--text);padding:12px 14px;font-size:14px;font-family:inherit;resize:vertical;
+    transition:border .15s, box-shadow .15s;}
+  textarea{min-height:170px;line-height:1.6}
+  textarea:focus,input:focus,select:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+  textarea::placeholder,input::placeholder{color:var(--muted2)}
+  label.field{display:block;font-size:12.5px;color:var(--muted);margin:13px 0 6px;font-weight:600}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:560px){.two{grid-template-columns:1fr}}
+
+  .samples{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .samples .lbl{font-size:12px;color:var(--muted);width:100%}
+  .chipbtn{cursor:pointer;border:1px solid var(--border2);background:#0c1526;color:var(--text);
+    font-size:12.5px;padding:7px 12px;border-radius:99px;transition:all .15s;font-family:inherit}
+  .chipbtn:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-1px)}
+
+  .actions{display:flex;gap:10px;margin-top:18px}
+  .btn{cursor:pointer;border:none;border-radius:12px;font-weight:700;font-size:14.5px;
+    padding:13px 22px;transition:transform .12s, opacity .15s;font-family:inherit}
+  .btn:active{transform:scale(.97)}
+  .btn-primary{flex:1;color:#03121a;background:linear-gradient(92deg,var(--cyan),var(--indigo));
+    box-shadow:0 10px 28px -12px rgba(34,211,238,.55)}
+  .btn-primary:disabled{opacity:.55;cursor:wait}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2)}
+  .btn-ghost:hover{color:var(--text)}
+  .btn-sm{padding:8px 14px;font-size:12.5px;border-radius:10px}
+  .err{display:none;margin-top:12px;font-size:13px;color:#fda4af;
+    background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.35);
+    padding:9px 12px;border-radius:10px;}
+
+  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:330px;text-align:center;color:var(--muted2);gap:12px}
+  .empty svg{opacity:.5} .empty p{font-size:13.5px;max-width:320px}
+
+  .verdict-row{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+  .gauge{width:150px;height:150px;flex:none}
+  .gauge.sm{width:120px;height:120px}
+  .gauge-bg{fill:none;stroke:#1b2740;stroke-width:11}
+  .gauge-fill{fill:none;stroke-width:11;stroke-linecap:round;transform:rotate(-90deg);
+    transform-origin:center;transition:stroke-dashoffset 1s cubic-bezier(.22,1,.36,1), stroke .4s;}
+  .gauge-num{font-size:34px;font-weight:800;fill:#e5e9f2}
+  .gauge-max{font-size:12px;fill:var(--muted)}
+  .verdict-info{flex:1;min-width:210px}
+  .badge{display:inline-block;font-weight:800;font-size:14px;letter-spacing:.3px;
+    padding:6px 14px;border-radius:99px;margin-bottom:8px;}
+  .verdict-info p{font-size:13.5px;color:var(--muted)}
+  .meta{margin-top:10px;font-size:11.5px;color:var(--muted2)}
+
+  .sec{margin-top:22px}
+  .sec h3{font-size:13px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+
+  .flag{background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.28);
+    border-radius:12px;padding:13px 15px;margin-bottom:10px;}
+  .flag.pos{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.3)}
+  .flag.info{background:rgba(167,139,250,.07);border-color:rgba(167,139,250,.3)}
+  .flag-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .flag-title{font-weight:700;font-size:14px}
+  .pts{font-weight:800;font-size:13px;color:var(--red);white-space:nowrap;
+    background:rgba(244,63,94,.12);padding:3px 10px;border-radius:99px}
+  .pos .pts{color:var(--green);background:rgba(16,185,129,.12)}
+  .flag p{font-size:12.8px;color:var(--muted);margin-top:5px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .chip{font-size:11.5px;padding:3px 9px;border-radius:8px;
+    background:rgba(244,63,94,.14);color:#fecdd3;border:1px solid rgba(244,63,94,.3);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-word;}
+  .pos .chip{background:rgba(16,185,129,.13);color:#a7f3d0;border-color:rgba(16,185,129,.3)}
+
+  .msg-hl{background:#0a1222;border:1px solid var(--border);border-radius:12px;
+    padding:15px;font-size:13.5px;line-height:1.85;white-space:pre-wrap;word-break:break-word;}
+  .msg-hl mark{background:rgba(244,63,94,.22);color:#fecdd3;border-radius:4px;padding:1px 2px;
+    border-bottom:2px solid var(--red);}
+  .msg-hl mark.pos{background:rgba(16,185,129,.16);color:#a7f3d0;border-bottom-color:var(--green)}
+
+  .ents{display:flex;flex-direction:column;gap:8px}
+  .ent-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .ent-lbl{font-size:12px;color:var(--muted);min-width:74px}
+  .ent-chip{font-size:12px;background:#131f3a;border:1px solid var(--border2);
+    padding:3px 10px;border-radius:8px;color:#c7d2fe;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;}
+  .none{font-size:13px;color:var(--muted2)}
+
+  /* agent question cards */
+  .qcard{background:#0c1526;border:1px solid var(--border2);border-radius:14px;padding:16px;margin-bottom:14px}
+  .qnum{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+    border-radius:8px;background:linear-gradient(92deg,var(--cyan),var(--indigo));
+    color:#03121a;font-weight:800;font-size:12.5px;margin-right:8px}
+  .qtext{font-weight:700;font-size:14px;display:inline}
+  .qwhy{font-size:12px;color:var(--muted2);margin:8px 0 10px}
+  .qmsg{font-size:12.5px;color:#a5b4d4;background:#0a1222;border-left:3px solid var(--indigo);
+    padding:9px 12px;border-radius:8px;margin-bottom:10px;white-space:pre-wrap}
+  .qreply{min-height:84px;font-size:13px}
+
+  .vrows{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+  .vrow{display:flex;gap:9px;font-size:12.8px;color:var(--muted);align-items:flex-start}
+  .vrow b{color:var(--text)}
+  .cat{display:inline-block;font-size:12px;font-weight:700;padding:3px 11px;border-radius:99px;margin-bottom:8px}
+  .cat.good{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.4)}
+  .cat.warn{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.4)}
+  .cat.bad{background:rgba(244,63,94,.15);color:var(--red);border:1px solid rgba(244,63,94,.4)}
+  .delta{font-weight:800;margin-left:8px}
+  .delta.up{color:var(--green)} .delta.down{color:var(--red)}
+
+  .verdict-pill{display:inline-block;font-weight:800;font-size:13px;padding:6px 16px;border-radius:99px}
+  .vp-worth{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.45)}
+  .vp-maybe{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.45)}
+  .vp-not{background:rgba(244,63,94,.15);color:var(--red);border:1px solid rgba(244,63,94,.45)}
+  .vp-na{background:rgba(148,163,184,.12);color:var(--muted);border:1px solid var(--border2)}
+
+  .notice{font-size:12px;color:var(--amber);background:rgba(245,158,11,.08);
+    border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:9px 12px;margin-top:14px}
+
+  .how{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;padding:6px 0 30px}
+  .how .card{padding:18px}
+  .how h4{font-size:14.5px;margin-bottom:5px}
+  .how p{font-size:13px;color:var(--muted)}
+  .step-ico{font-size:22px;margin-bottom:8px}
+
+  footer{border-top:1px solid var(--border);padding:18px 0 30px;margin-top:8px}
+  footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted2)}
+  .disc{max-width:640px}
+</style>
+</head>
+<body>
+
+<!-- ambient background video -->
+<video id="bg-video" autoplay muted loop playsinline preload="auto" src="assets/bg.mp4" aria-hidden="true"></video>
+<div class="bg-overlay" aria-hidden="true"></div>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z" stroke="url(#lg)" stroke-width="1.8" fill="rgba(34,211,238,.08)"/>
+        <path d="M8.5 12l2.4 2.4L15.7 9.6" stroke="#34d399" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#22d3ee"/><stop offset="1" stop-color="#818cf8"/></linearGradient></defs>
+      </svg>
+      <div>ScamCheck<small>OPPORTUNITY VERIFICATION ENGINE</small></div>
+    </div>
+    <span class="pill"><span class="dot" id="engineDot"></span><span id="engineTxt">connecting…</span></span>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <section class="hero">
+    <span class="tag">Hackspora 2.0 · Problem Statement 3</span>
+    <h1>Verify before you trust.</h1>
+    <p>Scan a suspicious offer — or run full due-diligence on the person behind it.
+       Every flag is explainable, every question is evidence-driven.</p>
+  </section>
+
+  <div class="tabs">
+    <button class="tab active" id="tabScanner" onclick="switchView('scanner')">📩 Message Scanner</button>
+    <button class="tab" id="tabAgent" onclick="switchView('agent')">🕵️ Agent Verify</button>
+  </div>
+
+  <!-- ============================ SCANNER VIEW ============================ -->
+  <div class="view active" id="view-scanner">
+    <div class="grid">
+      <section class="card">
+        <h2>📩 Opportunity details <span class="hint">— paste the full message</span></h2>
+        <textarea id="message" placeholder="e.g. Congrats! You are selected for a paid internship. To confirm your seat pay a refundable registration fee of ₹999..."></textarea>
+        <label class="field" for="sender">Sender's email address (optional — enables domain checks)</label>
+        <input type="email" id="sender" placeholder="e.g. hr.companyname@gmail.com">
+  
+        <div class="actions">
+          <button class="btn btn-primary" id="analyzeBtn" onclick="analyze()">🔍 Analyze Risk</button>
+          <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+        </div>
+        <div class="err" id="err"></div>
+      </section>
+
+      <section class="card" id="resultsCard">
+        <div class="empty" id="emptyState">
+          <svg width="72" height="72" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5l8-3z" stroke="#33415e" stroke-width="1.4"/>
+            <circle cx="11" cy="11" r="3.2" stroke="#33415e" stroke-width="1.4"/>
+            <path d="M13.6 13.6L17 17" stroke="#33415e" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <p>Results will appear here —<br>risk gauge, red-flag breakdown, and highlighted evidence.</p>
+        </div>
+        <div id="results" style="display:none"></div>
+      </section>
+    </div>
+
+    <section class="how">
+      <div class="card"><div class="step-ico">🧩</div><h4>1 · Extract</h4><p>The engine parses emails, links, phone numbers, and money amounts from the raw message.</p></div>
+      <div class="card"><div class="step-ico">🚩</div><h4>2 · Detect</h4><p>10 rule families check for fee demands, fake domains, urgency pressure, unrealistic pay, and more.</p></div>
+      <div class="card"><div class="step-ico">⚖️</div><h4>3 · Score</h4><p>Weighted points → 0–30 Safe · 31–60 Caution · 61–100 Likely Scam.</p></div>
+    </section>
+  </div>
+
+  <!-- ============================ AGENT VIEW ============================ -->
+  <div class="view" id="view-agent">
+    <div class="grid">
+      <section class="card">
+        <h2>🕵️ Who are you verifying? <span class="hint">— recruiter, mentor, course, company…</span></h2>
+        <div class="two">
+          <div>
+            <label class="field">Name</label>
+            <input id="aName" placeholder="Person or brand name">
+          </div>
+          <div>
+            <label class="field">Organization</label>
+            <input id="aOrg" placeholder="Company / institute">
+          </div>
+        </div>
+        <div class="two">
+          <div>
+            <label class="field">They are a…</label>
+            <select id="aRole">
+              <option value="recruiter">Recruiter / HR</option>
+              <option value="internship">Internship provider</option>
+              <option value="mentor">Mentor</option>
+              <option value="course">Course seller</option>
+              <option value="event">Event organizer</option>
+              <option value="other" selected>Other / not sure</option>
+            </select>
+          </div>
+          <div>
+            <label class="field">Fee asked (₹, 0 if free)</label>
+            <input id="aFee" type="number" min="0" placeholder="e.g. 1500">
+          </div>
+        </div>
+        <label class="field">Links / emails they shared (optional)</label>
+        <input id="aLinks" placeholder="e.g. careers.company.com, hr.company@gmail.com, linkedin.com/in/…">
+        <label class="field">Their pitch / message</label>
+        <textarea id="aPitch" placeholder="Paste exactly what they sent or told you — claims, promises, fees…"></textarea>
+        <div class="actions">
+          <button class="btn btn-primary" id="agentBtn" onclick="agentAnalyze()">🧠 Analyze & Generate Questions</button>
+          <button class="btn btn-ghost" onclick="agentClear()">Reset</button>
+        </div>
+        <div class="err" id="aErr"></div>
+      </section>
+
+      <section class="card" id="agentCard">
+        <div class="empty" id="agentEmpty">
+          <svg width="72" height="72" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="8" r="4" stroke="#33415e" stroke-width="1.4"/>
+            <path d="M4 21c1.5-4 5-5.5 8-5.5s6.5 1.5 8 5.5" stroke="#33415e" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M17.5 4.5l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1 1-2.4z" fill="#33415e" opacity=".7"/>
+          </svg>
+          <p>The agent will analyze the pitch, score credibility,
+             and generate the exact questions to ask — then verify every reply you paste back.</p>
+        </div>
+        <div id="agentResults" style="display:none"></div>
+        <div class="notice" id="agentNotice" style="display:none"></div>
+      </section>
+    </div>
+
+    <section class="how">
+      <div class="card"><div class="step-ico">🧾</div><h4>1 · Intake scan</h4><p>Pitch text runs through the full scam engine; links and claims are checked for unrealistic promises.</p></div>
+      <div class="card"><div class="step-ico">❓</div><h4>2 · Smart questions</h4><p>Due-diligence questions are generated from the findings — with ready-to-send message versions.</p></div>
+      <div class="card"><div class="step-ico">🔁</div><h4>3 · Reply verification</h4><p>Paste each reply: the agent checks topical relevance, evasion, pressure, and contradictions — then asks the next question.</p></div>
+      <div class="card"><div class="step-ico">⚖️</div><h4>4 · Verdict</h4><p>Live credibility meter + fee value verdict: WORTH IT / MAYBE / NOT WORTH IT.</p></div>
+    </section>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p class="disc">⚠️ ScamCheck performs automated offline heuristic & consistency checks. A “safe/medium” result is not a guarantee — always confirm IDs, links, and claims on official portals (MCA, GST, LinkedIn, company website) before paying anyone.</p>
+    <p>FastAPI · Explainable rule engine v1.0 + Agent v1.0 · Hackspora 2.0</p>
+  </div>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const CIRC = 2 * Math.PI * 58;
+
+/* ---------- health ---------- */
+fetch("/api/health").then(r => r.json()).then(d => {
+  $("engineDot").classList.add("on");
+  $("engineTxt").textContent = "engine v" + d.engine_version + " · online";
+}).catch(() => { $("engineTxt").textContent = "engine offline"; });
+
+/* ---------- view switching ---------- */
+function switchView(v){
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".view").forEach(t => t.classList.remove("active"));
+  $("view-" + v).classList.add("active");
+  $(v === "scanner" ? "tabScanner" : "tabAgent").classList.add("active");
+}
+
+/* ============================ SCANNER ============================ */
+let samples = [];
+
+async function analyze(){
+  const message = $("message").value.trim();
+  const sender = $("sender").value.trim();
+  if (message.length < 10){ showErr("err","Paste the complete message first (at least 10 characters)."); return; }
+  showErr("err",""); setLoading("analyzeBtn", true, "⏳ Analyzing…");
+  try{
+    const res = await fetch("/api/analyze", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({message, sender_email: sender || null})});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Analysis failed.");
+    render(data, message);
+  }catch(e){ showErr("err", e.message || "Could not reach the analysis engine."); }
+  setLoading("analyzeBtn", false, "🔍 Analyze Risk");
+}
+
+function setLoading(id, on, label){ const b = $(id); b.disabled = on; b.textContent = label; }
+function showErr(id, m){ const e = $(id); e.style.display = m ? "block" : "none"; e.textContent = m; }
+function clearAll(){ $("message").value = ""; $("sender").value = ""; showErr("err","");
+  $("results").style.display = "none"; $("emptyState").style.display = "flex"; }
+
+function gaugeSVG(id, color, max){
+  return `<svg class="gauge" viewBox="0 0 150 150">
+    <circle class="gauge-bg" cx="75" cy="75" r="58"/>
+    <circle class="gauge-fill" id="${id}Arc" cx="75" cy="75" r="58" stroke="${color}"
+      stroke-dasharray="${CIRC}" stroke-dashoffset="${CIRC}"/>
+    <text x="75" y="72" text-anchor="middle" class="gauge-num" id="${id}Num">0</text>
+    <text x="75" y="95" text-anchor="middle" class="gauge-max" id="${id}Max">/ ${max}</text>
+  </svg>`;
+}
+function animateGauge(id, score, max){
+  requestAnimationFrame(() => {
+    const arc = $(id+"Arc"); if(!arc) return;
+    arc.style.strokeDashoffset = CIRC * (1 - score / max);
+    const t0 = performance.now();
+    const tick = now => { const k = Math.min(1,(now-t0)/900);
+      $(id+"Num").textContent = Math.round(score * (1 - Math.pow(1-k,3)));
+      if (k < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+}
+
+function render(data, original){
+  $("emptyState").style.display = "none";
+  const R = $("results"); R.style.display = "block";
+  const v = data.verdict;
+  const flagCards = arr => arr.length ? arr.map(f => `
+    <div class="flag ${f.points < 0 ? "pos" : ""}">
+      <div class="flag-head"><span class="flag-title">${esc(f.title)}</span>
+        <span class="pts">${f.points > 0 ? "+" : ""}${f.points} pts</span></div>
+      <p>${esc(f.explanation)}</p>
+      ${f.matches && f.matches.length ? `<div class="chips">${f.matches.map(m => `<span class="chip">${esc(m.text)}</span>`).join("")}</div>` : ""}
+    </div>`).join("") : `<p class="none">None detected.</p>`;
+  const ent = (lbl, icon, items) => items && items.length ? `
+    <div class="ent-row"><span class="ent-lbl">${icon} ${lbl}</span>
+      ${items.map(x => `<span class="ent-chip">${esc(x)}</span>`).join("")}</div>` : "";
+  const hl = highlight(original, data);
+
+  R.innerHTML = `
+    <div class="verdict-row">${gaugeSVG("g1", v.color, data.max_score)}
+      <div class="verdict-info">
+        <span class="badge" style="background:${v.color}22;color:${v.color};border:1px solid ${v.color}55">${esc(v.label)}</span>
+        <p>${esc(v.description)}</p>
+        <p class="meta">${esc(data.summary)} · engine v${esc(data.engine_version)} · ${new Date(data.analyzed_at).toLocaleString()}</p>
+      </div>
+    </div>
+    <div class="sec"><h3>🚩 Red flags (${data.flags.length})</h3>${flagCards(data.flags)}</div>
+    <div class="sec"><h3>✅ Trust signals (${data.positive_signals.length})</h3>${flagCards(data.positive_signals)}</div>
+    <div class="sec"><h3>🔦 Highlighted evidence</h3><div class="msg-hl">${hl}</div></div>
+    <div class="sec"><h3>🧾 Extracted details</h3><div class="ents">
+      ${data.extracted.sender ? ent("Sender","✉️",[data.extracted.sender]) : ""}
+      ${ent("Emails","📧",data.extracted.emails)}${ent("Links","🔗",data.extracted.urls)}
+      ${ent("Phones","📱",data.extracted.phones)}${ent("Amounts","💰",data.extracted.amounts)}
+      ${(!data.extracted.sender && !data.extracted.emails.length && !data.extracted.urls.length && !data.extracted.phones.length && !data.extracted.amounts.length) ? '<p class="none">No contact details or amounts found.</p>' : ""}
+    </div></div>`;
+  animateGauge("g1", data.score, data.max_score);
+  if (window.innerWidth < 940) $("resultsCard").scrollIntoView({behavior:"smooth"});
+}
+
+function highlight(text, data){
+  const reds = data.flags.flatMap(f => f.matches || []);
+  const greens = data.positive_signals.flatMap(p => p.matches || []);
+  const spans = merge(reds.map(m => ({...m, cls:""})));
+  const greenOnly = greens.filter(g => !spans.some(r => g.start < r.end && r.start < g.end));
+  const all = merge(spans.concat(greenOnly.map(m => ({...m, cls:"pos"}))));
+  let out = "", cur = 0;
+  for (const s of all){
+    out += esc(text.slice(cur, s.start));
+    out += `<mark class="${s.cls}">` + esc(text.slice(s.start, s.end)) + "</mark>";
+    cur = s.end;
+  }
+  return out + esc(text.slice(cur));
+}
+function merge(spans){
+  const s = spans.slice().sort((a,b) => a.start - b.start || b.end - a.end);
+  const out = [];
+  for (const x of s){
+    const last = out[out.length-1];
+    if (last && x.start < last.end){
+      if (x.end > last.end) last.end = x.end;
+      if (last.cls !== "pos") last.cls = x.cls || last.cls;
+    } else out.push({...x});
+  }
+  return out;
+}
+
+/* ============================ AGENT ============================ */
+let agentState = { credibility: 0, history: [], qSeq: 0, usedTopics: new Set() };
+
+function agentClear(){
+  ["aName","aOrg","aLinks","aPitch","aFee"].forEach(id => $(id).value = "");
+  showErr("aErr","");
+  $("agentResults").style.display = "none";
+  $("agentNotice").style.display = "none";
+  $("agentEmpty").style.display = "flex";
+  agentState = { credibility: 0, history: [], qSeq: 0, usedTopics: new Set() };
+}
+
+async function agentAnalyze(){
+  const pitch = $("aPitch").value.trim();
+  if (pitch.length < 10 && !$("aName").value.trim() && !$("aLinks").value.trim()){
+    showErr("aErr","Give the agent something to work with — paste their pitch, or at least a name + link."); return;
+  }
+  showErr("aErr",""); setLoading("agentBtn", true, "⏳ Analyzing…");
+  const feeVal = parseFloat($("aFee").value);
+  try{
+    const res = await fetch("/api/agent/analyze", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        name: $("aName").value.trim(), organization: $("aOrg").value.trim(),
+        role: $("aRole").value, links: $("aLinks").value.trim(),
+        pitch, fee: isNaN(feeVal) ? null : feeVal
+      })});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "Analysis failed.");
+    agentState = { credibility: data.credibility.score, history: [], qSeq: 0, usedTopics: new Set() };
+    renderAgent(data);
+  }catch(e){ showErr("aErr", e.message || "Could not reach the agent engine."); }
+  setLoading("agentBtn", false, "🧠 Analyze & Generate Questions");
+}
+
+function feePill(v){
+  if (v === "WORTH IT") return `<span class="verdict-pill vp-worth">✅ ${v}</span>`;
+  if (v === "MAYBE WORTH IT") return `<span class="verdict-pill vp-maybe">🤔 ${v}</span>`;
+  if (v === "NOT WORTH IT") return `<span class="verdict-pill vp-not">🚫 ${v}</span>`;
+  return `<span class="verdict-pill vp-na">${esc(v)}</span>`;
+}
+function credColor(s){ return s >= 70 ? "#10b981" : s >= 40 ? "#f59e0b" : "#f43f5e"; }
+
+function renderAgent(d){
+  $("agentEmpty").style.display = "none";
+  const R = $("agentResults"); R.style.display = "block";
+  const c = d.credibility, col = credColor(c.score);
+
+  const pitchSec = d.pitch_scan ? `
+    <div class="flag info"><div class="flag-head">
+      <span class="flag-title">Pitch auto-scan</span>
+      <span class="pts" style="color:var(--violet);background:rgba(167,139,250,.12)">${d.pitch_scan.score}/100 · ${esc(d.pitch_scan.verdict)}</span></div>
+      <p>${d.pitch_scan.flags.length ? "Flags in pitch: " + d.pitch_scan.flags.map(esc).join(" · ") : "No red flags found inside the pitch text."}</p>
+    </div>` : "";
+
+  const list = (arr, cls) => arr && arr.length
+    ? arr.map(x => `<div class="flag ${cls}" style="padding:9px 13px"><p style="margin:0;font-size:13px;color:var(--text)">${esc(x)}</p></div>`).join("")
+    : `<p class="none">None.</p>`;
+
+  const claims = d.unrealistic_claims.length ? d.unrealistic_claims.map(cl => `
+    <div class="flag"><div class="flag-head"><span class="flag-title">${esc(cl.label)}</span>
+      <span class="pts">claim</span></div>
+      <p>"${esc(cl.text)}" — ${esc(cl.why)}</p></div>`).join("") : `<p class="none">No unrealistic promises detected in the pitch.</p>`;
+
+  const feeSec = d.fee_evaluation.applicable ? `
+    <div class="card" style="padding:15px;margin-top:4px">
+      ${feePill(d.fee_evaluation.verdict)}
+      ${d.fee_evaluation.fee ? `<span style="margin-left:10px;font-weight:700">Fee: ₹${d.fee_evaluation.fee}</span>` : ""}
+      <div class="vrows">${d.fee_evaluation.reasons.map(r => `<div class="vrow">▪️ <span>${esc(r)}</span></div>`).join("")}</div>
+    </div>` : "";
+
+  R.innerHTML = `
+    <div class="verdict-row">${gaugeSVG("g2", col, 100)}
+      <div class="verdict-info">
+        <span class="badge" style="background:${col}22;color:${col};border:1px solid ${col}55">Initial credibility: ${c.band}</span>
+        <p>Subject: <b>${esc(d.subject.name || "—")}</b> @ ${esc(d.subject.organization || "—")} · role: ${esc(d.subject.role)}</p>
+        <p class="meta">Credibility updates live as you verify each reply below.</p>
+      </div>
+    </div>
+    ${pitchSec}
+    <div class="sec"><h3>🔗 Link / contact checks</h3>${list(d.link_notes, "info")}</div>
+    <div class="sec"><h3>🚨 Unrealistic claims</h3>${claims}</div>
+    <div class="sec"><h3>🚩 Red flags</h3>${list(d.red_flags, "")}</div>
+    <div class="sec"><h3>✅ Positive signals</h3>${list(d.positive_signals, "pos")}</div>
+    ${feeSec ? `<div class="sec"><h3>💰 Fee & value evaluation</h3>${feeSec}</div>` : ""}
+    <div class="sec"><h3>❓ Ask these — in order</h3><div id="qList"></div></div>
+    <div id="agentCredLive" class="meta" style="margin-top:6px"></div>`;
+
+  $("agentNotice").style.display = "block";
+  $("agentNotice").textContent = "ℹ️ " + d.offline_notice;
+
+  animateGauge("g2", c.score, 100);
+  updateCredLive();
+  d.questions.forEach(q => addQuestionCard(q, $("qList")));
+  if (window.innerWidth < 940) $("agentCard").scrollIntoView({behavior:"smooth"});
+}
+
+function updateCredLive(delta){
+  const el = $("agentCredLive"); if (!el) return;
+  const s = agentState.credibility;
+  el.innerHTML = `📈 Live credibility: <b style="color:${credColor(s)}">${s}/100 (${s>=70?"High":s>=40?"Medium":"Low"})</b>` +
+    (delta ? ` <span class="delta ${delta>0?"up":"down"}">(${delta>0?"+":""}${delta} from last reply)</span>` : "");
+}
+
+function addQuestionCard(q, container){
+  if (agentState.usedTopics.has(q.topic)) return;
+  agentState.usedTopics.add(q.topic);
+  const n = ++agentState.qSeq;
+  const id = "q" + n;
+  const div = document.createElement("div");
+  div.className = "qcard"; div.id = id;
+  div.innerHTML = `
+    <span class="qnum">${n}</span><span class="qtext">${esc(q.question)}</span>
+    <p class="qwhy">Why this: ${esc(q.why)}</p>
+    <div class="qmsg">✉️ <b>Ready to send:</b> ${esc(q.message)}</div>
+    <button class="btn btn-ghost btn-sm" onclick='copyMsg(${JSON.stringify(q.message)})'>📋 Copy message</button>
+    <label class="field" style="margin-top:12px">Their reply — paste it here:</label>
+    <textarea class="qreply" id="${id}Reply" placeholder="[Paste their response here]"></textarea>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn btn-primary btn-sm" style="flex:none" onclick="verifyReply('${id}', '${q.topic}', ${n})">🔎 Verify reply</button>
+    </div>
+    <div id="${id}Analysis"></div>`;
+  container.appendChild(div);
+  div.scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+function copyMsg(t){ navigator.clipboard.writeText(t).catch(()=>{}); }
+
+async function verifyReply(id, topic, qNum){
+  const reply = $(id+"Reply").value.trim();
+  if (!reply) return;
+  const box = $(id+"Analysis");
+  box.innerHTML = `<p class="none" style="margin-top:10px">⏳ Verifying…</p>`;
+  try{
+    const res = await fetch("/api/agent/reply", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({topic, question:"", reply, history: agentState.history})});
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.detail || "Verification failed.");
+    agentState.history.push({topic, reply});
+    agentState.credibility = Math.max(0, Math.min(100, agentState.credibility + d.credibility_delta));
+
+    const catCls = ["specific","partial"].includes(d.reply_category) ? "good"
+                 : ["vague","off_topic"].includes(d.reply_category) ? "warn" : "bad";
+    const rv = d.reply_verification;
+    const rows = (arr, ico, name) => arr.length ? arr.map(x => `<div class="vrow">${ico} <span><b>${name}:</b> ${esc(x)}</span></div>`).join("") : "";
+
+    box.innerHTML = `
+      <div class="flag info" style="margin-top:12px">
+        <span class="cat ${catCls}">${esc(d.reply_category_label)}</span>
+        <span class="delta ${d.credibility_delta>0?"up":"down"}">${d.credibility_delta>0?"+":""}${d.credibility_delta} credibility</span>
+        <div class="vrows">
+          ${rows(rv.verified,"✅","Supported")}${rows(rv.partial,"⚠️","Needs manual check")}
+          ${rows(rv.unverified,"❓","Unverified")}${rows(rv.contradicted,"❌","Problem")}
+        </div>
+        <p class="meta" style="margin-top:8px">${d.stats.words} words · ${d.stats.topic_keywords_matched} topic keywords · ${d.stats.links_found} link(s)</p>
+        <p class="meta">${esc(d.offline_notice)}</p>
+      </div>`;
+    updateCredLive(d.credibility_delta);
+
+    if (d.next_question && !$("qList").querySelector(`[data-follow="${d.next_question.topic}"]`)){
+      const holder = document.createElement("div");
+      holder.setAttribute("data-follow", d.next_question.topic);
+      $("qList").appendChild(holder);
+      addQuestionCard({...d.next_question, why: "Follow-up: " + d.next_question.why}, holder.parentNode);
+      holder.remove();
+    }
+  }catch(e){
+    box.innerHTML = `<div class="err" style="display:block;margin-top:10px">${esc(e.message)}</div>`;
+  }
+}
+</script>
+</body>
+</html>
