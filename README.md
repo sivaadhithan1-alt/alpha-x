@@ -1,4 +1,4 @@
-Perfect — here's a complete, professional, hackathon-submission README. Copy everything in the code block below and paste it into that GitHub editor → click **Commit changes**. (Also saved it as `github-README.md` in your workspace for backup.)
+hackspora 2.0
 
 ```markdown
 # 🛡️ ScamCheck — Opportunity Verification Engine
