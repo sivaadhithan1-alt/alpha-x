@@ -116,14 +116,7 @@ zero external API keys.
 └── vercel.json
 ```
 
-## 🚀 Run Locally
 
-```bash
-pip install -r requirements.txt
-uvicorn backend.main:app --host 0.0.0.0 --port 8000
-# → http://localhost:8000        (app)
-# → http://localhost:8000/docs   (Swagger API docs)
-```
 
 ## ✅ Verification (judge-verifiable)
 
